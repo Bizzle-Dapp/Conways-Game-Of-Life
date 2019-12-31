@@ -2,7 +2,7 @@
 
 This is one of the first applications I made. 
 
-![Alt text](Conways-Game-Of-Life\Example.PNG?raw=true "Example Image")
+![Alt text](Example.PNG?raw=true "Example Image")
 
 ## Getting Started
 
