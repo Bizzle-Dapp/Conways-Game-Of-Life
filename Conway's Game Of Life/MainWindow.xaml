@@ -11,7 +11,7 @@
         <Label x:Name="lblStartStop" Content="Offline" HorizontalAlignment="Left" Margin="515,35,0,0" VerticalAlignment="Top" Width="75"/>
         <Grid x:Name="CellGrid" HorizontalAlignment="Left" Height="340" Margin="18,35,0,0" VerticalAlignment="Top" Width="490" MaxWidth="490" MaxHeight="340" ShowGridLines="True" Background="White" Grid.RowSpan="10" Grid.ColumnSpan="10" MinWidth="490" MinHeight="340" Grid.Row="10" Grid.Column="10"/>
         <TextBox x:Name="tbColumnCount" HorizontalAlignment="Left" Height="23" Margin="54,7,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="75" TextChanged="tbColumnCount_TextChanged"/>
-        <TextBox x:Name="tbRowCount" HorizontalAlignment="Left" Height="23" Margin="186,7,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="75" TextChanged="tbColumnCount_TextChanged"/>
+        <TextBox x:Name="tbRowCount" HorizontalAlignment="Left" Height="23" Margin="186,7,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="75" TextChanged="tbRowCount_TextChanged"/>
         <Button x:Name="btnCreateGrid" Content="Generate" HorizontalAlignment="Left" Margin="273,9,0,0" VerticalAlignment="Top" Width="75" Click="btnCreateGrid_Click"/>
         <Label Content="Column" HorizontalAlignment="Left" Margin="3,5,0,0" VerticalAlignment="Top"/>
         <Label Content="Row" HorizontalAlignment="Left" Margin="152,6,0,0" VerticalAlignment="Top"/>

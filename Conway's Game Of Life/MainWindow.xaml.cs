@@ -1,20 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 
+
+//
+//  This is one of the first functional programs I ever wrote.
+//  Updated 31/12/2019 because: https://tvtropes.org/pmwiki/pmwiki.php/Main/OldShame
+//
 namespace Conway_s_Game_Of_Life
 {
     /// <summary>
@@ -22,306 +16,267 @@ namespace Conway_s_Game_Of_Life
     /// </summary>
     public partial class MainWindow : Window
     {
-
-        DispatcherTimer appTimer = new DispatcherTimer();
-        ColumnDefinition[] gridColumn = new ColumnDefinition[10];
-        RowDefinition[] gridRow = new RowDefinition[10];
-        LivingCell[] cell = new LivingCell[100];
-        SolidColorBrush Alive = new SolidColorBrush(Colors.Black);
-        SolidColorBrush Dead = new SolidColorBrush(Colors.WhiteSmoke);
-        Int32 columnCount;
-        Int32 rowCount;
-        Int32 numberOfCells;
+        private readonly DispatcherTimer _appTimer = new DispatcherTimer();
+        private ColumnDefinition[] _gridColumn;
+        private RowDefinition[] _gridRow;
+        private LivingCell[] _cell;
+        
+        private int _columnCount;
+        private int _rowCount;
+        private int _numberOfCells;
 
         public MainWindow()
         {
             InitializeComponent();
+            MessageBox.Show("WELCOME TO Bizzle_Dapp's version of Conway's Game of Life." +
+                            Environment.NewLine +
+                            "To begin, enter how many rows by columns you'd like for your grid, " +
+                            "then click 'Generate'. Once you have a grid to work with, click on Cells to set them to alive. " +
+                            "Once you've created your starting colony Start the application with the 'Start/Stop' " +
+                            "button and watch the colony live it's life...");
         }
 
         //Start / Stop program button
         private void btnStartStop_Click(object sender, RoutedEventArgs e)
         {
-
             if (lblStartStop.Content.ToString() == "Offline")
             {
                 //Initiate Timer
-                appTimer.Tick += new EventHandler(TimerExecute);
-                appTimer.Interval = new TimeSpan(0, 0, 2);
+                _appTimer.Tick += new EventHandler(TimerExecute);
+                _appTimer.Interval = new TimeSpan(0, 0, 2);
                 
                 //Switch on
                 lblStartStop.Content = "Online";
-                cell[21].IsAlive = true;
-                cell[22].IsAlive = true;
-                cell[23].IsAlive = true;
-                cell[27].IsAlive = true;
-                cell[28].IsAlive = true;
-                cell[29].IsAlive = true;
-                cell[30].IsAlive = true;
-                cell[31].IsAlive = true;
-                cell[32].IsAlive = true;
-                cell[33].IsAlive = true;
+                // This is how i should have done it from the start: cell[21].CellState(true);
+                // This is how i was doing it before: cell[22].IsAlive = true;
+                // I wrote the CellState(bool) method and never used it!
 
                 //Start Timer
-                appTimer.Start();
+                _appTimer.Start();
             }
             else
             {
                 //Stop Timer
-                appTimer.Stop();
+                _appTimer.Stop();
 
                 //Switch off
                 lblStartStop.Content = "Offline";
-                for (var c = 0; c < numberOfCells; c++)
+                for (var c = 0; c < _numberOfCells; c++)
                 {
-                    cell[c].IsAlive = false;
-                    cell[c].LifeValue = 0;
+                    _cell[c].IsAlive = false;
+                    _cell[c].LifeValue = 0;
                 }
-                CheckLifeState();
             }
         }
 
         //The main logic of the program
         public void LivingApplication()
         {
-            columnCount = Convert.ToInt32(tbColumnCount.Text);
-            rowCount = Convert.ToInt32(tbRowCount.Text);
-            numberOfCells = columnCount * rowCount;
+            _columnCount = Convert.ToInt32(tbColumnCount.Text);
+            _rowCount = Convert.ToInt32(tbRowCount.Text);
+            _numberOfCells = _columnCount * _rowCount;
 
             // Initialise
-            for (var c = 0; c < numberOfCells; c++)
+            for (var c = 0; c < _numberOfCells; c++)
             {
-                cell[c].LifeValue = 0;
+                _cell[c].LifeValue = 0;
             }
             
-
             //Check each LivingCell in all directions to determine it's total value of adjacent life
-            for (var c = 0; c < numberOfCells; c++)
+            for (var c = 0; c < _numberOfCells; c++)
             {
                 var isColumnIndexStart = false;
                 var isColumnIndexEnd = false;
-                var isRowIndexStart = false;
-                var isRowIndexEnd = false;
 
-                if(c % rowCount == 0)
+                if (c / _rowCount == 0)
                 { isColumnIndexStart = true; }
-                if(c + 1 % rowCount == 0)
+                if (c / _rowCount == _rowCount)
                 { isColumnIndexEnd = true; }
-                if (c / rowCount == 0)
-                { isRowIndexStart = true; }
-                if (c / rowCount == rowCount)
-                { isRowIndexEnd = true; }
 
-                //c - rowCount - 1 = TopLeftCell(Except Row 0 && Column 0)
-                if (isColumnIndexStart == false && isRowIndexStart == false)
+                try
                 {
-                    if (cell[c - rowCount - 1].IsAlive == true)
+                    // Above and Left node is (c - (_rowCount + 1))
+                    // But consider isColumnIndexStart
+                    if (!isColumnIndexStart)
                     {
-                        cell[c].LifeValue += 1;
-                    }
-                    else
-                    {
-                        //TopLeftCell is not alive
+                        if (_cell[(c - (_rowCount + 1))].IsAlive) _cell[c].LifeValue += 1;
                     }
                 }
-                //c - rowCount = TopCell (Except Row 0 )
-                if (isRowIndexStart == false)
+                catch (IndexOutOfRangeException e)
                 {
-                    if (cell[c - rowCount].IsAlive == true)
-                    {
-                        cell[c].LifeValue += 1;
-                    }
-                    else
-                    {
-                        //TopCell is not alive
-                    }
-                }
-                //c - rowCount + 1 = TopRightCell (Except Row 0 && Column == ColumnCount)
-                if (isRowIndexStart == false && isColumnIndexEnd == false)
-                {
-                    if (cell[c - rowCount + 1].IsAlive == true)
-                    {
-                        cell[c].LifeValue += 1;
-                    }
-                    else
-                    {
-                        //TopRightCell is not alive
-                    }
-                }
-                //c - 1 = LeftCell (Except Column 0)
-                if (isColumnIndexStart == false)
-                {
-                    if (cell[c - 1].IsAlive == true)
-                    {
-                        cell[c].LifeValue += 1;
-                    }
-                    else
-                    {
-                        //LeftCell is not alive
-                    }
-                }
-                //c + 1 = RightCell (Except Column == ColumnCount)
-                if (isColumnIndexEnd == false)
-                {
-                    if (c < numberOfCells - columnCount)
-                    {
-                        if (cell[c + 1].IsAlive == true)
-                        {
-                            cell[c].LifeValue += 1;
-                        }
-                        else
-                        {
-                            //RightCell is not alive
-                        }
-                    }
-                }
-                //c + rowCount - 1 = BottomLeftCell (Except Row == RowCount && Column 0 )
-                if (isColumnIndexStart == false && isRowIndexEnd == false)
-                {
-                    if (c < numberOfCells - columnCount - 1)
-                    {
-                        if (cell[c + rowCount - 1].IsAlive == true)
-                        {
-                            cell[c].LifeValue += 1;
-                        }
-                        else
-                        {
-                            //BottomLeftell is not alive
-                        }
-                    }
-                }
-                //c + rowCount = BottomCell (Except Row == RowCount)
-                if (isRowIndexEnd == false)
-                {
-                    if (c < numberOfCells - columnCount - 1)
-                    {
-                        if (cell[c + rowCount].IsAlive == true)
-                        {
-                            cell[c].LifeValue += 1;
-                        }
-                        else
-                        {
-                            //BottomCell is not alive
-                        }
-                    }
-                }
-                //c + rowCount + 1 = BottomRightCell (Except Column == ColumnCount && Row == RowCount)
-                if (isColumnIndexEnd == false && isRowIndexEnd == false)
-                {
-                    if(c < numberOfCells - columnCount - 1 )
-                    {
-                        if (cell[c + rowCount + 1].IsAlive == true)
-                        {
-                            cell[c].LifeValue += 1;
-                        }
-                        else
-                        {
-                            //BottomRightCell is not alive
-                        }
-                    }
+                    // Edge Cell - consider this a dead neighbor
                 }
 
+                try
+                {
+                    // Above is (c - _columnCount)
+                    if (_cell[(c - _columnCount)].IsAlive) _cell[c].LifeValue += 1;
+                }
+                catch (IndexOutOfRangeException e)
+                {
+                    // Edge Cell - consider this a dead neighbor
+                }
+
+                try
+                {
+                    // Above and Right node is (c - (_rowCount - 1))
+                    // But consider isColumnIndexEnd
+                    if (!isColumnIndexEnd)
+                    {
+                        if(_cell[(c - (_rowCount - 1))].IsAlive) _cell[c].LifeValue += 1;
+                    }
+                }
+                catch (IndexOutOfRangeException e)
+                {
+                    // Edge Cell - consider this a dead neighbor
+                }
+
+                try
+                {
+                    // Left node is (c - 1)
+                    // But consider isColumnIndexStart
+                    if (!isColumnIndexStart)
+                    {
+                        if(_cell[(c - 1)].IsAlive) _cell[c].LifeValue += 1;
+                    }
+                }
+                catch (IndexOutOfRangeException e)
+                {
+                    // Edge Cell - consider this a dead neighbor
+                }
+
+                try
+                {
+                    // Right node is (c + 1)
+                    // But consider isColumnIndexEnd
+                    if (!isColumnIndexEnd)
+                    {
+                        if(_cell[(c + 1)].IsAlive) _cell[c].LifeValue += 1;
+                    }
+                }
+                catch (IndexOutOfRangeException e)
+                {
+                    // Edge Cell - consider this a dead neighbor
+                }
+                try
+                {
+                    // Bottom and Left node is ( c + (_rowCount - 1))
+                    // But consider isColumnIndexStart
+                    if (!isColumnIndexStart)
+                    {
+                        if(_cell[(c + (_rowCount - 1))].IsAlive) _cell[c].LifeValue += 1;
+                    }
+                }
+                catch (IndexOutOfRangeException e)
+                {
+                    // Edge Cell - consider this a dead neighbor
+                }
+                try
+                {
+                    // Bottom node is (c + _columnCount)
+                    if (_cell[(c + _columnCount)].IsAlive) _cell[c].LifeValue += 1;
+                }
+                catch (IndexOutOfRangeException e)
+                {
+                    // Edge Cell - consider this a dead neighbor
+                }
+                try
+                {
+                    // Bottom and Right node is (c + (_rowCount + 1))
+                    // But consider isColumnIndexEnd
+                    if (!isColumnIndexEnd)
+                    {
+                        if(_cell[(c + (_rowCount + 1))].IsAlive) _cell[c].LifeValue += 1;
+                    }
+                }
+                catch (IndexOutOfRangeException e)
+                {
+                    // Edge Cell - consider this a dead neighbor
+                }
             }
 
             //Alter each cell based on its LifeValue
-            for (var c = 0; c < numberOfCells; c++)
+            for (var c = 0; c < _numberOfCells; c++)
             {
-                if (cell[c].IsAlive == true)
+                if (_cell[c].IsAlive == true)
                 //LivingCell.IsALive = true
                 //If LivingCell has <2 Living Neighbors set IsAlive to false
                 //If LivingCell has 2 or 3 Living Neighbors remain unchanged
                 //If LivingCell has >3 Living Neighbors set IsAlive to false
                 {
-                    if(cell[c].LifeValue < 2)
+                    if(_cell[c].LifeValue < 2)
                     {
-                        cell[c].IsAlive = false;
+                        _cell[c].CellState(false);
                     }
-                    if(cell[c].LifeValue == 2 && cell[c].LifeValue == 3)
+                    if(_cell[c].LifeValue == 2 && _cell[c].LifeValue == 3)
                     {
                        //Cell lives on unchanged!  
                     }
-                    if(cell[c].LifeValue > 3)
+                    if(_cell[c].LifeValue > 3)
                     {
-                        cell[c].IsAlive = false;
+                        _cell[c].CellState(false);
                     }
                 }
                 //else
                 //If LivingCell.IsAlive = false,  
-                //If 3 Neightboring LivingCells IsAlive = true, set IsAlive to true
+                //If 3 neighboring LivingCells IsAlive = true, set IsAlive to true
                 else
                 {
-                    if(cell[c].LifeValue == 3)
+                    if(_cell[c].LifeValue == 3)
                     {
-                        cell[c].IsAlive = true;
+                        _cell[c].CellState(true);
                     }
                 }
             }
-
         }
 
-        // Checks the IsAlive bool of cell and returns Alive or Dead color
-        public void CheckLifeState()
+        public void TimerExecute(object source, EventArgs e)
         {
-            foreach (var c in cell)
-            {
-                if (c.IsAlive == true)
-                {
-                    c.Background = Alive;
-                }
-                else
-                {
-                    c.Background = Dead;
-                }
-            }
-        }
-
-
-        public void TimerExecute(Object source, EventArgs e)
-        {
-            CheckLifeState();
             LivingApplication();
         }
 
         public void GenerateCells()
         {
-
             //Take input to create the grid and generate number of cells and their container
-            columnCount = Convert.ToInt32(tbColumnCount.Text);
-            rowCount = Convert.ToInt32(tbRowCount.Text);
-            numberOfCells = columnCount * rowCount;
-            cell = new LivingCell[numberOfCells];
-            ColumnDefinition[] gridColumn = new ColumnDefinition[columnCount];
-            RowDefinition[] gridRow = new RowDefinition[rowCount];
+            _columnCount = Convert.ToInt32(tbColumnCount.Text);
+            _rowCount = Convert.ToInt32(tbRowCount.Text);
+            _numberOfCells = _columnCount * _rowCount;
+            _cell = new LivingCell[_numberOfCells];
+            _gridColumn = new ColumnDefinition[_columnCount];
+            _gridRow = new RowDefinition[_rowCount];
 
             // Create cells in cell[] and default to IsActive = False; LifeValue = 0;
-            for (var c = 0; c < numberOfCells; c++)
+            for (var c = 0; c < _numberOfCells; c++)
             {
-                cell[c] = new LivingCell();
-                cell[c].IsAlive = false;
-                cell[c].LifeValue = 0;
+                _cell[c] = new LivingCell
+                {
+                    IsAlive = false,
+                    LifeValue = 0
+                };
             }
 
             //Create rows and columns for the gridColumn[] and gridRow[]
-            for (var row = 0; row < rowCount; row++)
+            for (var row = 0; row < _rowCount; row++)
             {
-                gridRow[row] = new RowDefinition();
-                CellGrid.RowDefinitions.Add(gridRow[row]);
+                _gridRow[row] = new RowDefinition();
+                CellGrid.RowDefinitions.Add(_gridRow[row]);
             }
-            for (var column = 0; column < columnCount; column++)
+            for (var column = 0; column < _columnCount; column++)
             {
-                gridColumn[column] = new ColumnDefinition();
-                CellGrid.ColumnDefinitions.Add(gridColumn[column]);
+                _gridColumn[column] = new ColumnDefinition();
+                CellGrid.ColumnDefinitions.Add(_gridColumn[column]);
 
             }
 
             // Initialise cells, assigning LivingCell[] to the gridColumn/Rows and providing LivingCell.RowNumber and ColumnNumber
             var counter1 = 0;
-            for (var row = 0; row < rowCount; row++)
+            for (var row = 0; row < _rowCount; row++)
             {
-                for (var column = 0; column < columnCount; column++)
+                for (var column = 0; column < _columnCount; column++)
                 {
-                    Grid.SetColumn(cell[counter1], column);
-                    Grid.SetRow(cell[counter1], row);
-                    CellGrid.Children.Add(cell[counter1]);
+                    Grid.SetColumn(_cell[counter1], column);
+                    Grid.SetRow(_cell[counter1], row);
+                    CellGrid.Children.Add(_cell[counter1]);
                     counter1++;
                 }
             }
