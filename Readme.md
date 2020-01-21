@@ -1,6 +1,6 @@
 # Conway's Game of Life
 
-### This is one of the first applications I made. 
+(This is one of the first applications I made.)
 
 ### The Game of Life, also known simply as Life, is a cellular automaton devised by the British mathematician John Horton Conway in 1970.
 
